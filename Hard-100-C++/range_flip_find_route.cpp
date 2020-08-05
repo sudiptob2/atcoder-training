@@ -1,37 +1,112 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int h, w;
+long long h, w;
 vector<string>a;
 
-const int inf = (int)1e+9 + 7;
+const long long inf = 1e+17;
 
-map<pair<int, int>, int>m;
-int solve(int row, int col){
-    
-    if(m.find({row, col}) != m.end()){
-        return m[{row, col}];
-    }
-    int current_min;
-    if(row == h-1 && col == w-1){
-        if(a[row][col] == '#') return 1;
-        else return 0;
-    }
-    if(row >= h || col >= w){
-        return inf;
+long long solve(){
+    long long dp[h][w][2];
+    // [2] = {0 -- "#", 1 -- "."}
+    //memset(dp, long long_MAX, sizeof(dp));
+    for(long long i = 0; i < h; i++){
+        for(long long j = 0; j < w; j++){
+            //cout << dp[i][j][0] << dp[i][j][1] << " ";
+            dp[i][j][0] = inf;
+            dp[i][j][1] = inf;
+        }
     }
     
-    int min1 = solve(row, col + 1);
-    int min2 = solve(row + 1, col);
-    if(a[row][col] == '#'){
-        current_min = min(min1, min2) + 1;
+    if(a[h-1][w-1] == '#'){
+        dp[h-1][w-1][1] = 1;
     }else{
-        current_min = min(min1, min2);
+        dp[h-1][w-1][0] = 0;
     }
     
-    //cout << row << " " << col << " " << current_min << endl;
+    // Fill the last row
+    for(long long col = w-2; col >= 0; col --){
+        long long row = h-1;
+        long long current_value;
+        if(a[row][col] == '.'){
+                current_value = dp[row][col][0];
+                current_value = min({current_value, dp[row][col+1][0], dp[row][col+1][1]});
+                dp[row][col][0] = current_value;
+            }else{
+                current_value = dp[row][col][1];
+                current_value = min({current_value, dp[row][col+1][0], dp[row][col+1][1]});
+                
+                if(current_value == dp[row][col+1][0] && a[row][col+1] == '.'){
+                    current_value += 1;
+                }
+                dp[row][col][1] = current_value;
+            }
+    }
     
-    return m[{row, col}] = current_min;
+    // Fill the last column
+    for(long long row = h-2; row >= 0; row--){
+        long long col = w-1;
+        long long current_value;
+        if(a[row][col] == '.'){
+                current_value = dp[row][col][0];
+                current_value = min({current_value, dp[row+1][col][0], dp[row+1][col][1]});
+                dp[row][col][0] = current_value;
+            }else{
+                current_value = dp[row][col][1];
+                current_value = min({current_value, dp[row+1][col][0], dp[row+1][col][1] });
+                
+                if(current_value == dp[row+1][col][0] && a[row+1][col] == '.'){
+                    current_value += 1;
+                }
+                dp[row][col][1] = current_value;
+                
+            }
+    }
+    
+    
+    
+    
+    // Fill everything else
+    for(long long row = h-2; row >= 0; row--){
+        for(long long col = w-2; col >= 0; col--){
+            long long current_value;
+            if(a[row][col] == '.'){
+                current_value = dp[row][col][0];
+                current_value = min({current_value, dp[row+1][col][0], dp[row+1][col][1], dp[row][col+1][0], dp[row][col+1][1]});
+                dp[row][col][0] = current_value;
+            }else{
+                current_value = dp[row][col][1];
+                current_value = min({current_value, dp[row+1][col][0], dp[row+1][col][1], dp[row][col+1][0], dp[row][col+1][1]});
+                
+                if(current_value == dp[row][col+1][0] && dp[row][col+1][0] < min(dp[row+1][col][1], dp[row][col+1][1]) && a[row][col+1] == '.'){
+                    current_value += 1;
+                }else if(current_value == dp[row+1][col][0] && dp[row+1][col][0] < min(dp[row+1][col][1], dp[row][col+1][1]) && a[row+1][col] == '.'){
+                    current_value += 1;
+                }
+                dp[row][col][1] = current_value;
+                
+            }
+        }
+    }
+    
+    
+    
+    //for(long long i = 0; i < h; i++){
+        //for(long long j = 0; j < w; j++){
+            //long long one = dp[i][j][0];
+            //long long two = dp[i][j][1];
+            //printf("|. %lld # %lld| ", one, two);
+        //}cout << endl;
+    //}
+    
+    //for(long long i = 0; i < h; i++){
+        //for(long long j = 0; j < w; j++){
+            //cout << a[i][j] << " ";
+        //}cout << endl;
+    //}
+    
+    return min(dp[0][0][0], dp[0][0][1]);
+    
     
 }
 
@@ -42,11 +117,10 @@ int main(){
     
     cin >> h >> w;
     a.resize(h);
-    m.clear();
-    for(int i = 0; i < h; i++){
+    for(long long i = 0; i < h; i++){
         cin >> a[i];
     }
     
-    cout << solve(0, 0) << endl;
+    cout << solve() << endl;
     
 }
